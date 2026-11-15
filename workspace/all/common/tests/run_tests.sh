@@ -80,6 +80,7 @@ sh test_launcher_logs_path.sh
 sh test_nx_launch_opts.sh
 sh test_tg5040_power_boot.sh
 sh test_msettings_shm.sh
+sh test_osd_led_sh.sh
 cc -std=gnu99 -Wall -Werror -fsanitize=address -g -o /tmp/nx_test_home_layout ../../nextui/home_layout.c test_home_layout.c -lm
 /tmp/nx_test_home_layout
 cc -std=gnu99 -Wall -Werror -fsanitize=address -g -o /tmp/nx_test_home_carousel_layout ../../nextui/home_carousel_layout.c ../../nextui/row_model.c test_home_carousel_layout.c -lm
@@ -207,3 +208,5 @@ cc -std=gnu99 -Wall -Werror -fsanitize=address -g -I.. -o /tmp/nx_test_str_trim 
 /tmp/nx_test_str_trim
 cc -std=gnu99 -Wall -Werror -fsanitize=address -g -I.. -o /tmp/nx_test_trigger_axis test_trigger_axis.c
 /tmp/nx_test_trigger_axis
+cc -std=gnu99 -Wall -Werror -fsanitize=address -g -I.. -o /tmp/nx_test_led_model test_led_model.c
+/tmp/nx_test_led_model
