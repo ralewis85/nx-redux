@@ -125,6 +125,17 @@ int main(void) {
 	CHECK(!CFG_getWifi() && !CFG_getBluetooth(), "the explicit flag is used once");
 	CHECK(count_key(merged, "wifi=0") == 1 && count_key(merged, "bluetooth=0") == 1, "the radios follow the file");
 
+	// ledBatteryBar (clamped to valid enum range) & ledSplitSticks round-trip
+	CFG_setLedBatteryBar(LED_BATTERY_BAR_BOTH);
+	CFG_setLedSplitSticks(true);
+	merged = slurp();
+	CHECK(CFG_getLedBatteryBar() == LED_BATTERY_BAR_BOTH && count_key(merged, "ledBatteryBar=3") == 1,
+		  "ledBatteryBar persisted");
+	CHECK(CFG_getLedSplitSticks() && count_key(merged, "ledSplitSticks=1") == 1,
+		  "ledSplitSticks persisted");
+	CFG_setLedBatteryBar(99);
+	CHECK(CFG_getLedBatteryBar() == LED_BATTERY_BAR_OFF, "out-of-range ledBatteryBar clamps to OFF");
+
 	free(canon);
 	unlink(path);
 	rmdir(dir);
