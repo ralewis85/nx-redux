@@ -162,6 +162,75 @@ int main(void) {
 		CHECK(0, "WGET_ARGS_LOG not set (run via scripts/tests/test-cheatdb-data.sh)");
 	}
 
+	// NDS libretro -> DraStic format conversion (pure + archive-index folder rewrite)
+	{
+		const char* lr =
+			"cheats = 2\n"
+			"cheat0_desc = \"Anti-Piracy Bypass Code\"\n"
+			"cheat0_code = \"0204E334+E3A00000+0204E338+E12FFF1E\"\n"
+			"cheat0_enable = false\n"
+			"cheat1_desc = \"Max Coins\"\n"
+			"cheat1_code = \"1217ACDC 0000000A\"\n"
+			"cheat1_enable = true\n";
+		const char* expected =
+			"[Anti-Piracy Bypass Code]\n"
+			"0204E334 E3A00000\n"
+			"0204E338 E12FFF1E\n"
+			"\n"
+			"[Max Coins+]\n"
+			"1217ACDC 0000000A\n";
+		char converted[1024];
+		int clen = Cheatdb_convertNdsCheat(lr, converted, sizeof(converted));
+		CHECK(clen > 0 && strcmp(converted, expected) == 0, "NDS libretro .cht converts to DraStic format");
+
+		char idem[1024];
+		int ilen = Cheatdb_convertNdsCheat(converted, idem, sizeof(idem));
+		CHECK(ilen == clen && strcmp(idem, expected) == 0, "NDS DraStic conversion is idempotent");
+
+		// Edge cases: CRLF, unquoted fields, concatenated 16-hex token, ';'/',' separators,
+		// empty code skipped, default "Cheat" desc, and too-small output cap returning -1.
+		const char* edge_lr =
+			"cheats = 3\r\n"
+			"cheat2_desc = \r\n"
+			"cheat2_code = 0204E334E3A00000;1217ACDC,0000000A\r\n"
+			"cheat2_enable = 1\r\n"
+			"cheat5_desc = \"Empty Code Skipped\"\r\n"
+			"cheat5_code = \"\"\r\n"
+			"cheat1_desc = Unquoted Desc\r\n"
+			"cheat1_code = AAAAAAAA+BBBBBBBB\r\n";
+		const char* edge_expected =
+			"[Cheat+]\n"
+			"0204E334 E3A00000\n"
+			"1217ACDC 0000000A\n"
+			"\n"
+			"[Unquoted Desc]\n"
+			"AAAAAAAA BBBBBBBB\n";
+		char edge_out[512];
+		int elen = Cheatdb_convertNdsCheat(edge_lr, edge_out, sizeof(edge_out));
+		CHECK(elen > 0 && strcmp(edge_out, edge_expected) == 0,
+			  "NDS converter handles CRLF, unquoted fields, 16-hex tokens, and ';'/',' separators");
+
+		char tiny[12];
+		CHECK(Cheatdb_convertNdsCheat(lr, tiny, sizeof(tiny)) == -1, "NDS converter returns -1 on buffer overflow");
+		CHECK(Cheatdb_convertNdsCheat(NULL, tiny, sizeof(tiny)) == -1, "NDS converter rejects NULL input");
+
+		char nds_dest[600], nds_file[700];
+		snprintf(nds_dest, sizeof(nds_dest), "%s/NDS", p.cheats_dir);
+		Cheatdb_extractFolder(&p, "Nintendo - Nintendo DS", nds_dest);
+		Cheatdb_convertNdsFolder(&p, "Nintendo - Nintendo DS", nds_dest);
+		snprintf(nds_file, sizeof(nds_file), "%s/Mario Kart DS (USA).cht", nds_dest);
+		FILE* nf = fopen(nds_file, "rb");
+		char disk[1024] = {0};
+		if (nf) {
+			size_t nr = fread(disk, 1, sizeof(disk) - 1, nf);
+			disk[nr] = '\0';
+			fclose(nf);
+		}
+		CHECK(strcmp(disk, expected) == 0, "Cheatdb_convertNdsFolder rewrites NDS .cht in place via archive index");
+		remove(nds_file);
+		rmdir(nds_dest);
+	}
+
 	printf(fails ? "\n%d FAILURE(S)\n" : "\nALL PASS\n", fails);
 	return fails ? 1 : 0;
 }
