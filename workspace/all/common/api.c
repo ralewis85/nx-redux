@@ -3886,6 +3886,8 @@ FALLBACK_IMPLEMENTATION int PLAT_shouldWake(void) {
 				// ignore input while lid is closed
 				if (lid.has_lid && !lid.is_open)
 					return 0; // do it here so we eat the input
+				if (BTN_WAKE == BTN_POWER && PLAT_isFnSwitchOn() && GetFnPreventWake())
+					return 0;
 				return 1;
 			}
 		} else if (event.type == SDL_JOYBUTTONUP) {
@@ -3894,6 +3896,8 @@ FALLBACK_IMPLEMENTATION int PLAT_shouldWake(void) {
 				// ignore input while lid is closed
 				if (lid.has_lid && !lid.is_open)
 					return 0; // do it here so we eat the input
+				if (BTN_WAKE == BTN_POWER && PLAT_isFnSwitchOn() && GetFnPreventWake())
+					return 0;
 				return 1;
 			}
 		}
@@ -3902,6 +3906,9 @@ FALLBACK_IMPLEMENTATION int PLAT_shouldWake(void) {
 }
 FALLBACK_IMPLEMENTATION int PLAT_supportsDeepSleep(void) {
 	return 0;
+}
+FALLBACK_IMPLEMENTATION int PLAT_isFnSwitchOn(void) {
+	return GetFnMode();
 }
 FALLBACK_IMPLEMENTATION void PLAT_enterSleepCpu(void) {}
 FALLBACK_IMPLEMENTATION void PLAT_reassertSleepCpu(void) {}
@@ -4689,7 +4696,10 @@ static void PWR_waitForWake(void) {
 		}
 		if (sleepDelay > 0 && SDL_GetTicks() - sleep_ticks >= sleepDelay) {
 			if (SDL_AtomicGet(&pwr.is_charging) ||
-				(CFG_getKeepAwakeUSB() && SDL_AtomicGet(&pwr.is_usb_connected))) {
+				(CFG_getKeepAwakeUSB() && SDL_AtomicGet(&pwr.is_usb_connected)) ||
+				(PLAT_isFnSwitchOn() && GetFnPreventWake())) {
+				// Travel lock: stay in interceptable hybrid sleep instead of
+				// escalating to deep sleep / poweroff.
 				sleep_ticks += 60000; // check again in a minute
 				continue;
 			}

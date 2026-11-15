@@ -147,10 +147,17 @@ static void do_suspend(void) {
 	SetRawBrightness(0);
 	SetRawVolume(0);
 
-	// Call platform suspend script (try PATH first, then known locations)
-	if (system("suspend") != 0) {
-		system("/mnt/SDCARD/.system/bin/suspend");
-	}
+	// Re-enter deep sleep if woken by an accidental power-button bump while
+	// travel lock (FN switch blocks power button) is active.
+	do {
+		if (system("suspend") != 0) {
+			system("/mnt/SDCARD/.system/bin/suspend");
+		}
+		if (!(is_fn_switch_on() && GetFnPreventWake()))
+			break;
+		for (int w = 0; w < 10 && is_fn_switch_on() && GetFnPreventWake(); w++)
+			usleep(200000);
+	} while (is_fn_switch_on() && GetFnPreventWake());
 
 	// Restore backlight (Brick & Brick Pro require an initial raw>=8 kick when
 	// waking to brightness 0 / raw 1), LEDs, and volume on wake.
