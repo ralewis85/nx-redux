@@ -53,9 +53,29 @@ static void test_values(void) {
 	assert(r.x == 0 && r.y == 0 && r.w == 1280 && r.h == 300);
 }
 
+static void test_stick_pan(void) {
+	// Deadzone suppresses resting Hall-stick drift
+	assert(IvView_stickPanDelta(0, 35, 2.0f) == 0);
+	assert(IvView_stickPanDelta(4096, 35, 2.0f) == 0);
+	assert(IvView_stickPanDelta(-4096, 35, 2.0f) == 0);
+
+	// Proportional direction & inverse zoom scaling
+	int d1 = IvView_stickPanDelta(32767, 35, 1.0f);
+	int d2 = IvView_stickPanDelta(32767, 35, 2.0f);
+	int dn = IvView_stickPanDelta(-32767, 35, 2.0f);
+	assert(d1 == 35);
+	assert(d2 == 17);
+	assert(dn == -17);
+
+	// Extreme zoom clamps speed >= 1.0 image px at full deflection
+	assert(IvView_stickPanDelta(32767, 35, 100.0f) == 1);
+	assert(IvView_stickPanDelta(-32767, 35, 100.0f) == -1);
+}
+
 int main(void) {
 	test_sweep();
 	test_values();
+	test_stick_pan();
 	printf("test_iv_view_math: all assertions passed\n");
 	return 0;
 }

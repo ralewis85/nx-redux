@@ -28,4 +28,20 @@ static inline IvRect IvView_srcRect(int screen_w, int screen_h, float scale, int
 	return src;
 }
 
+#define IV_STICK_PAN_DEADZONE 4096
+
+// Proportional right-stick pan delta in image pixels for an SDL axis value in
+// [-32768..32767] at zoom `scale` and UI step `base_step_px` (e.g. SCALE1(14)).
+// Returns 0 inside the deadzone; scales inversely with zoom (clamped >= 1 px at
+// full deflection) so panning feels uniform on screen at any zoom level.
+static inline int IvView_stickPanDelta(int axis_val, int base_step_px, float scale) {
+	int mag = axis_val < 0 ? -axis_val : axis_val;
+	if (mag <= IV_STICK_PAN_DEADZONE || scale <= 0.0f)
+		return 0;
+	float speed = (float)base_step_px / scale;
+	if (speed < 1.0f)
+		speed = 1.0f;
+	return (int)((float)axis_val / 32767.0f * speed);
+}
+
 #endif

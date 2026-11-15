@@ -378,6 +378,12 @@ IvViewerStatus IvViewer_update(SDL_Surface* screen, bool* dirty) {
 			vw_cy += step;
 			panned = true;
 		}
+		// Smooth proportional right-stick pan on analog handhelds (Brick Pro, Smart Pro)
+		if (abs(pad.raxis.x) > IV_STICK_PAN_DEADZONE || abs(pad.raxis.y) > IV_STICK_PAN_DEADZONE) {
+			vw_cx += IvView_stickPanDelta(pad.raxis.x, SCALE1(14), scale);
+			vw_cy += IvView_stickPanDelta(pad.raxis.y, SCALE1(14), scale);
+			panned = true;
+		}
 		if (panned) {
 			vw_clamp_pan(screen, scale);
 			*dirty = true;
