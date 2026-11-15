@@ -162,11 +162,12 @@ never emit that code; Menu long-press opens the OSD on all of them.
 
 ## Notes
 
-- **These SDL indices are inherited from upstream NextUI's Brick Pro support
-  (PR #766 and its `fix: L4 and R4 button mappings` follow-up) and have not yet
-  been confirmed on hardware here.** Everything else in the Brick Pro port was
-  verified against the stock `sd_recovery_tg4040_brick_pro_v1.1.1_20260717.img`
-  rootfs.
+- **Confirmed live on Trimui Brick Pro hardware (FW 1.1.1):** all 16 SDL button
+  indices (`0..15`), dual Hall-effect sticks (`ABS_X`/`ABS_Y` axes `0`/`1`,
+  `ABS_RX`/`ABS_RY` axes `3`/`4`), proportional Hall-effect triggers (`ABS_Z`
+  axis `2`, `ABS_RZ` axis `5`), and `KEY_HOMEPAGE` (evdev `172` + SDL button `15`)
+  match the table above. Everything else in the Brick Pro port was verified
+  against the stock `sd_recovery_tg4040_brick_pro_v1.1.1_20260717.img` rootfs.
 - `/usr/trimui/bin/trimui_inputd` exists on the Brick Pro, so the tg5040 boot
   path (which starts the device's own stock input daemon by absolute path rather
   than vendoring one) works unchanged. Its turbo interface is the same

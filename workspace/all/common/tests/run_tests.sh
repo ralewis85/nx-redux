@@ -204,3 +204,5 @@ cc -std=gnu99 -Wall -Werror -fsanitize=address -g -I.. -o /tmp/nx_test_file_util
 /tmp/nx_test_file_util
 cc -std=gnu99 -Wall -Werror -fsanitize=address -g -I.. -o /tmp/nx_test_str_trim test_str_trim.c
 /tmp/nx_test_str_trim
+cc -std=gnu99 -Wall -Werror -fsanitize=address -g -I.. -o /tmp/nx_test_trigger_axis test_trigger_axis.c
+/tmp/nx_test_trigger_axis

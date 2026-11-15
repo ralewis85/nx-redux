@@ -22,6 +22,7 @@
 #include "../common/capture_defs.h"
 #include "../common/file_util.h"
 #include "../common/proc_spawn.h"
+#include "../common/trigger_axis.h"
 
 #define PID_FILE "/tmp/screenshot.pid"
 #define SCREENSHOT_DIR "/mnt/SDCARD/Images/Screenshots"
@@ -461,11 +462,24 @@ int main(int argc, char* argv[]) {
 		fclose(f);
 	}
 
-	// Open input devices
+	// Open input devices and query trigger axis maxima so Hall-effect analog
+	// triggers on Brick Pro require intentional travel (~25% press, ~15%
+	// release hysteresis) instead of latching on 1 ADC count of sensor noise.
 	char path[32];
+	int l2_max[INPUT_COUNT];
+	int r2_max[INPUT_COUNT];
 	for (int i = 0; i < INPUT_COUNT; i++) {
 		sprintf(path, "/dev/input/event%i", i);
 		inputs[i] = open(path, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+		l2_max[i] = 255;
+		r2_max[i] = 255;
+		if (inputs[i] >= 0) {
+			struct input_absinfo info;
+			if (ioctl(inputs[i], EVIOCGABS(ABS_Z_CODE), &info) == 0 && info.maximum > 0)
+				l2_max[i] = info.maximum;
+			if (ioctl(inputs[i], EVIOCGABS(ABS_RZ_CODE), &info) == 0 && info.maximum > 0)
+				r2_max[i] = info.maximum;
+		}
 	}
 
 	int l2_pressed = 0;
@@ -484,10 +498,11 @@ int main(int argc, char* argv[]) {
 				continue;
 			while (read(inputs[i], &ev, sizeof(ev)) == sizeof(ev)) {
 				if (ev.type == EV_ABS) {
-					if (ev.code == ABS_Z_CODE)
-						l2_pressed = ev.value > 0;
-					else if (ev.code == ABS_RZ_CODE)
-						r2_pressed = ev.value > 0;
+					if (ev.code == ABS_Z_CODE) {
+						l2_pressed = TriggerAxis_isEvdevPressed(ev.value, l2_max[i], l2_pressed);
+					} else if (ev.code == ABS_RZ_CODE) {
+						r2_pressed = TriggerAxis_isEvdevPressed(ev.value, r2_max[i], r2_pressed);
+					}
 				}
 			}
 		}

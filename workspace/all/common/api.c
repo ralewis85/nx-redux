@@ -23,6 +23,7 @@
 #include "audio_manager.h"
 #include "text_shape.h"
 #include "text_wrap.h"
+#include "trigger_axis.h"
 #include "rgba.h"
 
 
@@ -3806,15 +3807,22 @@ FALLBACK_IMPLEMENTATION void PLAT_pollInput(void) {
 			int axis = event.jaxis.axis;
 			int val = event.jaxis.value;
 
-			// triggers on tg5040
-			if (axis == AXIS_L2) {
-				btn = BTN_L2;
-				id = BTN_ID_L2;
-				pressed = val > 0;
-			} else if (axis == AXIS_R2) {
-				btn = BTN_R2;
-				id = BTN_ID_R2;
-				pressed = val > 0;
+			// triggers on tg5040 (digital -32768/+32767 on Brick, Hall analog on Brick Pro).
+			// Normalize [-32768..32767] -> [0..32767] with a ~3% resting deadzone and
+			// ~20% press / ~14% release hysteresis so analog triggers actuate crisply
+			// without midpoint chatter, while preserving full 15-bit analog range.
+			if (axis == AXIS_L2 || axis == AXIS_R2) {
+				int norm = TriggerAxis_normalizeSdl(val);
+				if (axis == AXIS_L2) {
+					pad.l2_axis = norm;
+					btn = BTN_L2;
+					id = BTN_ID_L2;
+				} else {
+					pad.r2_axis = norm;
+					btn = BTN_R2;
+					id = BTN_ID_R2;
+				}
+				pressed = TriggerAxis_isDigitalPressed(norm, (pad.is_pressed & btn) != 0);
 			}
 
 			else if (axis == AXIS_LX) {
