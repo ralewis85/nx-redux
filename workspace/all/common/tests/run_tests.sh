@@ -78,6 +78,7 @@ cc -std=gnu99 -Wall -Werror -fsanitize=address -g -o /tmp/nx_test_collname ../..
 /tmp/nx_test_collname
 sh test_launcher_logs_path.sh
 sh test_nx_launch_opts.sh
+sh test_tg5040_power_boot.sh
 cc -std=gnu99 -Wall -Werror -fsanitize=address -g -o /tmp/nx_test_home_layout ../../nextui/home_layout.c test_home_layout.c -lm
 /tmp/nx_test_home_layout
 cc -std=gnu99 -Wall -Werror -fsanitize=address -g -o /tmp/nx_test_home_carousel_layout ../../nextui/home_carousel_layout.c ../../nextui/row_model.c test_home_carousel_layout.c -lm
