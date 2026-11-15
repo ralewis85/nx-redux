@@ -311,6 +311,41 @@ static void test_long_line_passthrough(void) {
 	emu_ovl_cfg_free(&cfg);
 }
 
+// 12. default-<device>.cfg and system-<device>.cfg overlay their sibling base
+// files: omitted keys inherit values and locks from default.cfg/system.cfg, a
+// key set without '-' in default-<device>.cfg unlocks a '-' lock from
+// default.cfg (e.g. VB.pak on brickpro), and user console/game layers still win.
+static void test_device_default_overlay(void) {
+	reset_root();
+	write_file(ROOT "/system.cfg", "-minarch_unknown = locked_sys\n");
+	write_file(ROOT "/system-brickpro.cfg", "tc_frameskip = manual\n");
+	write_file(ROOT "/default.cfg", "-tc_frameskip = off\ntc_ratio = 16:9\n");
+	write_file(ROOT "/default-brickpro.cfg", "tc_frameskip = auto\n");
+	write_file(ROOT "/cfgdir/minarch-brickpro.cfg", "tc_ratio = 4:3\n");
+	setenv("DEVICE", "brickpro", 1);
+	static EmuOvlConfig cfg;
+	static OptsMinarchState st;
+	static OptsOverrideState ost;
+	load(&cfg, &st, &ost, ROOT "/system-brickpro.cfg", ROOT "/default-brickpro.cfg", NULL);
+	unsetenv("DEVICE");
+	assert(cfg.sections[0].item_count == 2);			 // tc_frameskip unlocked by default-brickpro.cfg
+	assert(cfg.sections[0].items[0].current_value == 1); // auto from default-brickpro.cfg
+	assert(cfg.sections[0].items[1].current_value == 0); // 4:3 from user minarch-brickpro.cfg over inherited 16:9
+	opts_minarch_free(&st);
+	emu_ovl_cfg_free(&cfg);
+
+	// Lock in default.cfg stays locked when omitted from default-<device>.cfg
+	reset_root();
+	write_file(ROOT "/default.cfg", "-tc_frameskip = off\ntc_ratio = 16:9\n");
+	write_file(ROOT "/default-brickpro.cfg", "tc_ratio = 4:3\n");
+	load(&cfg, &st, &ost, NULL, ROOT "/default-brickpro.cfg", NULL);
+	assert(cfg.sections[0].item_count == 1); // tc_frameskip stayed locked and was pruned
+	assert(strcmp(cfg.sections[0].items[0].key, "tc_ratio") == 0);
+	assert(cfg.sections[0].items[0].current_value == 0); // 4:3 from default-brickpro.cfg
+	opts_minarch_free(&st);
+	emu_ovl_cfg_free(&cfg);
+}
+
 int main(void) {
 	test_layering();
 	test_game_replaces_console();
@@ -323,6 +358,7 @@ int main(void) {
 	test_duplicate_first_wins();
 	test_crlf();
 	test_long_line_passthrough();
+	test_device_default_overlay();
 	printf("test_opts_minarch: all tests passed\n");
 	return 0;
 }

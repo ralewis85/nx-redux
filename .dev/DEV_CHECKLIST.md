@@ -224,11 +224,6 @@ Open items:
   discharge readout.
 - [ ] GPGX: deploy the pak to a test card and sweep it; until then it keeps the
   full range (genesis_plus_gx is generally heavier than MD/picodrive).
-- [ ] `Config_load` device-override semantics: `default-<DEVICE>.cfg` replaces
-  `default.cfg` wholesale, so any new `default.cfg` key silently drops on a pak
-  that ships an override (why the FC/SFC/FBN caps had to be copied into
-  `default-brick.cfg` / `default-brickpro.cfg`). Consider overlay semantics
-  (broader minarch change, not done).
 - [ ] Sporadic 68-75 ms single-frame stall: cause unknown (candidates: autosave /
   RetroAchievements / SD write / OSD daemon); frequency-independent, ~1/3 of runs.
 - [ ] Re-run the unmeasured systems (spec §4.2) once ROMs for them exist on a card.

@@ -59,6 +59,30 @@ int main(void) {
 			  "long value truncated to 255 chars, terminated");
 	}
 
+	// Config_resolveTierValue: (base_cfg, dev_cfg) overlay + lock/unlock semantics
+	{
+		const char* base = "-vb_3dmode = anaglyph\n-vb_right_analog_to_digital = disabled\nminarch_screen_scaling = Native\n";
+		const char* dev = "vb_right_analog_to_digital = enabled\nminarch_screen_scaling = Aspect\n";
+
+		lock = -1;
+		CHECK(Config_resolveTierValue(base, dev, "vb_3dmode", v, &lock) && !strcmp(v, "anaglyph") && lock == 1,
+			  "tier: omitted key inherits base value and '-' lock");
+		lock = -1;
+		CHECK(Config_resolveTierValue(base, dev, "vb_right_analog_to_digital", v, &lock) && !strcmp(v, "enabled") && lock == 0,
+			  "tier: plain key in dev_cfg overrides value and clears base '-' lock");
+		lock = -1;
+		CHECK(Config_resolveTierValue(base, dev, "minarch_screen_scaling", v, &lock) && !strcmp(v, "Aspect") && lock == 0,
+			  "tier: plain key in dev_cfg overrides plain base value");
+		lock = -1;
+		CHECK(Config_resolveTierValue("k = 1\n", "-k = 2\n", "k", v, &lock) && !strcmp(v, "2") && lock == 1,
+			  "tier: '-key' in dev_cfg adds lock");
+		CHECK(!Config_resolveTierValue(base, dev, "missing", v, &lock), "tier: absent in both returns 0");
+		CHECK(Config_resolveTierValue(NULL, dev, "minarch_screen_scaling", v, NULL) && !strcmp(v, "Aspect"),
+			  "tier: NULL base_cfg works");
+		CHECK(Config_resolveTierValue(base, NULL, "vb_3dmode", v, &lock) && !strcmp(v, "anaglyph") && lock == 1,
+			  "tier: NULL dev_cfg works");
+	}
+
 	printf(fails ? "\n%d FAILURE(S)\n" : "\nALL PASS\n", fails);
 	return fails ? 1 : 0;
 }

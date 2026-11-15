@@ -6,3 +6,9 @@
 // followed by " = ". out_value (at least 256 bytes) gets the value up to the
 // line ending, truncated to 255 chars. Returns 1 when found, else 0.
 int Config_getValue(const char* cfg, const char* key, char* out_value, int* lock);
+
+// Resolves `key` across a (base_cfg, dev_cfg) tier pair (e.g. default.cfg +
+// default-<device>.cfg): keys absent from dev_cfg inherit both value and '-'
+// lock from base_cfg, while a key explicitly set without '-' in dev_cfg clears
+// base_cfg's lock for this tier. Returns 1 when either layer matched, else 0.
+int Config_resolveTierValue(const char* base_cfg, const char* dev_cfg, const char* key, char* out_value, int* out_lock);

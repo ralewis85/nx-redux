@@ -29,3 +29,18 @@ int Config_getValue(const char* cfg, const char* key, char* out_value, int* lock
 	out_value[strcspn(out_value, "\r\n")] = '\0';
 	return 1;
 }
+
+int Config_resolveTierValue(const char* base_cfg, const char* dev_cfg, const char* key, char* out_value, int* out_lock) {
+	int tier_lock = 0;
+	int matched = 0;
+	if (base_cfg && Config_getValue(base_cfg, key, out_value, &tier_lock))
+		matched = 1;
+	int dev_lock = 0;
+	if (dev_cfg && Config_getValue(dev_cfg, key, out_value, &dev_lock)) {
+		tier_lock = dev_lock;
+		matched = 1;
+	}
+	if (matched && out_lock)
+		*out_lock = tier_lock;
+	return matched;
+}

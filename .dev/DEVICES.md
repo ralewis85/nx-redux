@@ -140,9 +140,10 @@ Notes:
   pak's `launch.sh` decides cores online (tg5050: `echo 0 > cpu4/online` for
   cores measured full-speed on the little cluster). Bench results are in
   `scripts/bench/results/<plat>/SUMMARY.md`.
-  `Config_load` loads `default-<DEVICE>.cfg` **instead of** `default.cfg` when one
-  exists (full replacement, not an overlay), so a key present
-  only in `default.cfg` silently drops on any device that ships an override.
+  `Config_load` and `opts_minarch_load` load `default.cfg` (and `system.cfg`)
+  first and overlay `default-<DEVICE>.cfg` (and `system-<DEVICE>.cfg`) on top,
+  inheriting omitted options, `-key` locks, and `bind` lines while allowing a
+  device file to override values or unlock a base `-key`.
 - **minarch can also pin threads by role** (spec:
   `docs/superpowers/specs/2026-09-20-minarch-thread-affinity-design.md`):
   `default.cfg` may carry `minarch_cpu_affinity = none|big|little`. `none` is the
