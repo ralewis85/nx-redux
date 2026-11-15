@@ -39,8 +39,8 @@ MBEDTLS_SRC = $(wildcard ../include/mbedtls_lib/*.c)
 SOURCE = $(TARGET).c ffplay_engine.c video_browser.c ../common/dir_list.c positions.c \
          iptv.c iptv_curated.c iptv_curated_sort.c \
          m3u.c \
-         module_common.c module_menu.c module_player.c module_iptv.c \
-         ui_icons.c ui_main.c ui_player.c ui_iptv.c \
+         module_common.c module_player.c module_iptv.c \
+         ui_icons.c ui_player.c ui_iptv.c ui_tabs.c ../nextui/minimal_draw.c \
          ../include/parson/parson.c \
          ../include/mbedtls_entropy_alt.c \
          $(MBEDTLS_SRC) \

@@ -20,6 +20,8 @@ cc -std=gnu99 -Wall -Werror -fsanitize=address -g -I.. -o /tmp/nx_test_ffplay_pa
 /tmp/nx_test_ffplay_parse
 cc -std=gnu99 -Wall -Werror -fsanitize=address -g -I.. -o /tmp/nx_test_iptv_text test_iptv_text.c
 /tmp/nx_test_iptv_text
+cc -std=gnu99 -Wall -Werror -fsanitize=address -g -I.. -o /tmp/nx_test_ui_tabs_math test_ui_tabs_math.c -lm
+/tmp/nx_test_ui_tabs_math
 cc -std=gnu99 -Wall -Werror -fsanitize=address -g -I.. -I../../common -I../../include -I../../../tg5040/platform -DPLATFORM=\"tg5040\" -DIPTV_CHANNELS_DIR='"/tmp/nx_test_iptv_user"' -o /tmp/nx_test_iptv_user ../iptv.c ../../include/parson/parson.c test_iptv_user.c
 /tmp/nx_test_iptv_user
 if command -v sdl2-config >/dev/null 2>&1; then
